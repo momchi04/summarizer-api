@@ -8,7 +8,7 @@ Companies regularly need to condense large amounts of text into something skimma
 
 ## Tech stack
 
-- Python 3.12.3
+- Python 3.12+
 - FastAPI — API framework
 - Ollama — runs the LLM locally
 - Model: llama3.2:3b (small, runs on a normal laptop, no GPU required)

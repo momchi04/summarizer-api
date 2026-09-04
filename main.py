@@ -3,7 +3,11 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 import pypdf
 import io
 from pydantic import BaseModel, Field
-import ollama
+import os
+from ollama import Client
+
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+client = Client(host=OLLAMA_HOST)
 
 app = FastAPI()
 
@@ -30,7 +34,7 @@ def chunk_text(text, max_chars=1000):
 
 def summarize_with_llama(text, instruction):
     try:
-        response = ollama.chat(
+        response = client.chat(
             model = "llama3.2:3b",
             messages = [
                 {

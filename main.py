@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+import pypdf
+import io
 from pydantic import BaseModel, Field
 import ollama
 
@@ -44,22 +46,46 @@ def summarize_with_llama(text, instruction):
         raise HTTPException(status_code=503, detail="The AI model is unavailable. Make sure Ollama is running.")
     return response["message"]["content"]
 
-@app.post("/summarize")
-def summarize(request: SummarizerRequest):
+def generate_summary(text, length):
     length_intructions = {
         "short": "in one sentence",
         "medium": "in 2-3 sentneces",
         "long": "in a detailed paragraph"
     }
-    instruction = length_intructions.get(request.length, length_intructions["medium"])
+    instruction = length_intructions.get(length, length_intructions["medium"])
 
-    if len(request.text) <= 1000:
-        summary = summarize_with_llama(request.text, instruction)
+    if len(text) <= 1000:
+        summary = summarize_with_llama(text, instruction)
     else:
-        chunks = chunk_text(request.text, max_chars=1000)
+        chunks = chunk_text(text, max_chars=1000)
         print(f"Text too long — split into {len(chunks)} chunks")
         chunk_summaries = [summarize_with_llama(chunk, "with a few sentences") for chunk in chunks]
         combined = "\n\n".join(chunk_summaries)
         summary = summarize_with_llama(combined, instruction)
+    return summary
 
+@app.post("/summarize")
+def summarize(request: SummarizerRequest):
+    summary = generate_summary(request.text, request.length)
+    return {"summary": summary}
+
+@app.post("/summarize-file")
+async def summarize_file(file: UploadFile = File(...), length: str = Form("medium")):
+    filename = file.filename.lower()
+    contents = await file.read()
+
+    if filename.endswith(".pdf"):
+        reader = pypdf.PdfReader(io.BytesIO(contents))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() + "\n\n"
+    elif filename.endswith(".txt"):
+        text = contents.decode("utf-8")
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type: Please upload a .pdf or .txt file.")
+
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Could not extract any text from the uploaded file.")
+
+    summary = generate_summary(text, length)
     return {"summary": summary}

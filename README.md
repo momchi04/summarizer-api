@@ -31,12 +31,17 @@ Companies regularly need to condense large amounts of text into something skimma
 3. Run it: `docker run -p 8000:8000 -e OLLAMA_HOST=http://host.docker.internal:11434 summarizer-api`
 4. API available at `http://127.0.0.1:8000`
 
+## Authentication
+
+All endpoints require an `X-API-Key` header. For local development it defaults to `dev-secret-key`, so no extra setup is needed. For anything beyond local testing, set your own secret via the `API_KEY` environment variable rather than relying on the default.
+
 ## Example usage
 
 Summarize raw text:
 ```bash
 curl -X POST http://127.0.0.1:8000/summarize \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-secret-key" \
   -d '{"text": "Ollama lets you run open-source AI models locally on your own computer instead of calling a cloud API.", "length": "medium"}'
 ```
 
@@ -49,7 +54,8 @@ Summarize an uploaded file:
 ```bash
 curl -X POST http://127.0.0.1:8000/summarize-file \
   -F "file=@test.txt" \
-  -F "length=medium"
+  -F "length=medium" \
+  -H "X-API-Key: dev-secret-key"
 ```
 
 ## Roadmap
@@ -59,6 +65,7 @@ curl -X POST http://127.0.0.1:8000/summarize-file \
 - [x] Accept file uploads (PDF, .txt)
 - [x] Input validation and graceful error handling
 - [x] Dockerize for easy deployment
+- [x] Add automated tests (pytest)
+- [x] Add basic API-key authentication
+- [ ] Add rate limiting
 - [ ] Deploy to a live URL (Render/Fly.io) for a public demo
-- [ ] Add basic API-key authentication and rate limiting
-- [ ] Add automated tests (pytest)

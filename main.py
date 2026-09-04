@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header
 import pypdf
 import io
 from pydantic import BaseModel, Field
@@ -8,6 +8,12 @@ from ollama import Client
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 client = Client(host=OLLAMA_HOST)
+
+API_KEY = os.environ.get("API_KEY", "dev-secret-key")
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 app = FastAPI()
 
@@ -69,12 +75,12 @@ def generate_summary(text, length):
         summary = summarize_with_llama(combined, instruction)
     return summary
 
-@app.post("/summarize")
+@app.post("/summarize", dependencies=[Depends(verify_api_key)])
 def summarize(request: SummarizerRequest):
     summary = generate_summary(request.text, request.length)
     return {"summary": summary}
 
-@app.post("/summarize-file")
+@app.post("/summarize-file", dependencies=[Depends(verify_api_key)])
 async def summarize_file(file: UploadFile = File(...), length: str = Form("medium")):
     filename = file.filename.lower()
     contents = await file.read()

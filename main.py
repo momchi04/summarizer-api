@@ -6,13 +6,27 @@ app = FastAPI()
 
 class SummarizerRequest(BaseModel):
     text:str
+    length: str = "medium"
 
 @app.post("/summarize")
 def summarize(request: SummarizerRequest):
+    length_intructions = {
+        "short": "in one sentence",
+        "medium": "in 2-3 sentneces",
+        "long": "in a detailed paragraph"
+    }
+    instruction = length_intructions.get(request.length, length_intructions["medium"])
     response = ollama.chat(
         model = "llama3.2:3b",
         messages = [
-            {"role": "user", "content": f"Summarize this in one sentence: {request.text}" }
+            {
+                "role": "system",
+                "content": "You are a summarization assistant. Only use information explicitly stated in the text you are given. Do not add outside facts, context, or assumptions that are not present in the text."
+            },
+            {
+                "role": "user", 
+                "content": f"Summarize this {instruction}: \n\n{request.text}"
+            }
         ]
     )
     return {"summary": response["message"]["content"]}

@@ -1,11 +1,11 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 import ollama
 
 app = FastAPI()
 
 class SummarizerRequest(BaseModel):
-    text:str
+    text:str = Field(..., min_length=1)
     length: str = "medium"
 
 def chunk_text(text, max_chars=1000):
@@ -26,19 +26,22 @@ def chunk_text(text, max_chars=1000):
     return chunks
 
 def summarize_with_llama(text, instruction):
-    response = ollama.chat(
-        model = "llama3.2:3b",
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a summarization assistant. Only use information explicitly stated in the text you are given. Do not add outside facts, context, or assumptions that are not present in the text. Respond with only the summary itself — do not include any preamble, introduction, or meta-commentary such as 'Here is a summary'."
-            },
-            {
-                "role": "user", 
-                "content": f"Summarize this {instruction}:\n\n{text}"
-            }
-        ]
-    )
+    try:
+        response = ollama.chat(
+            model = "llama3.2:3b",
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a summarization assistant. Only use information explicitly stated in the text you are given. Do not add outside facts, context, or assumptions that are not present in the text. Respond with only the summary itself — do not include any preamble, introduction, or meta-commentary such as 'Here is a summary'."
+                },
+                {
+                    "role": "user", 
+                    "content": f"Summarize this {instruction}:\n\n{text}"
+                }
+            ]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail="The AI model is unavailable. Make sure Ollama is running.")
     return response["message"]["content"]
 
 @app.post("/summarize")

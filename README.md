@@ -4,16 +4,16 @@ A backend API that takes text and returns an AI-generated summary, built locally
 
 ## Why this exists
 
-Companies regularly need to condense large amounts of text into something skimmable — customer support tickets, product reviews, meeting transcripts, long articles. This is a small proof-of-concept backend service that does exactly that: send it text (or a PDF/txt file), get back a summary. Built as a learning project to explore backend API design and running LLMs locally.
+Companies regularly need to condense large amounts of text into something skimmable, customer support tickets, product reviews, meeting transcripts, long articles. This is a small proof-of-concept backend service that does exactly that: send it text (or a PDF/txt file), get back a summary. Built as a learning project to explore backend API design and running LLMs locally.
 
 ## Tech stack
 
 - Python 3.12+
-- FastAPI — API framework
-- Ollama — runs the LLM locally
+- FastAPI - API framework
+- Ollama - runs the LLM locally
 - Model: llama3.2:3b (small, runs on a normal laptop, no GPU required)
-- Uvicorn — server that runs the app
-- Docker — optional containerized setup
+- Uvicorn - server that runs the app
+- Docker - optional containerized setup
 
 ## How to run it locally
 

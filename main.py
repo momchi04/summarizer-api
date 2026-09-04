@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 import pypdf
 import io
@@ -87,5 +88,5 @@ async def summarize_file(file: UploadFile = File(...), length: str = Form("mediu
     if not text.strip():
         raise HTTPException(status_code=400, detail="Could not extract any text from the uploaded file.")
 
-    summary = generate_summary(text, length)
+    summary = await asyncio.to_thread(generate_summary, text, length)
     return {"summary": summary}
